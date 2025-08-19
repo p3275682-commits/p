@@ -1,0 +1,69 @@
+
+local speedup = 1
+local newSpheresMin = 2
+local newSpheresMax = 3
+
+local spawnAreaMin = Vector3.new(-100, 5, -100)
+local spawnAreaMax = Vector3.new(100, 5, 100)
+
+local currentSphere = script.Parent
+
+
+local function findGroundPosition(x, z)
+	local rayOrigin = Vector3.new(x, 200, z) 
+	local rayDirection = Vector3.new(0, -300, 0)
+	local ignoreList = {currentSphere, workspace.Terrain} 
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+	raycastParams.FilterDescendantsInstances = ignoreList
+
+	local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+	if raycastResult then
+		return Vector3.new(x, raycastResult.Position.Y + 3, z)
+	else
+		return Vector3.new(x, spawnAreaMin.Y + 3, z) 
+	end
+end
+
+local function spawnNewSphere()
+	local x = math.random(spawnAreaMin.X, spawnAreaMax.X)
+	local z = math.random(spawnAreaMin.Z, spawnAreaMax.Z)
+	local position = findGroundPosition(x, z)
+
+	local newSphere = currentSphere:Clone()
+	newSphere.Position = position
+	newSphere.Anchored = false
+	newSphere.CanCollide = true
+	newSphere.Parent = workspace
+
+	local newScript = newSphere:FindFirstChildWhichIsA("Script")
+	if newScript then
+		newScript.Disabled = false
+		newScript:Clone() 
+		newScript.Parent = newSphere
+	end
+
+	return newSphere
+end
+
+local function onTouched(hit)
+	local hum = hit.Parent:FindFirstChildOfClass("Humanoid")
+	if not hum then return end
+
+	hum.WalkSpeed += speedup
+
+	currentSphere:Destroy()
+
+	local msg = Instance.new("Message")
+	msg.Text = "Level up !!!!!!!"
+	msg.Parent = workspace
+	task.wait(0.3)
+	msg:Destroy()
+
+	local count = math.random(newSpheresMin, newSpheresMax)
+	for i = 1, count do
+		spawnNewSphere()
+	end
+end
+
+currentSphere.Touched:Connect(onTouched)
