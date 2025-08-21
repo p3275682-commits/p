@@ -1,0 +1,61 @@
+local TweenServic = game:GetService("TweenService")
+local part = workspace.bear.default
+
+local speed = 1
+local moveInterval = 1
+
+part.CanCollide = true
+part.Anchored = false
+
+local sound = Instance.new("Sound")
+sound.SoundId = 'rbxassetid://737069339'
+sound.Parent = part
+sound.Volume = 1.0
+sound.PlaybackSpeed = 1.0
+
+local sound_1 = Instance.new("Sound")
+sound_1.SoundId = 'rbxassetid://737069339'
+sound_1.Parent = part
+sound_1.Volume = 1.0
+sound_1.PlaybackSpeed = 1.0
+
+local touchedConnections = {}
+part.Touched:Connect(function(hit)
+	local character = hit.Parent
+	local humanoid = character:FindFirstChild("Humanoid")
+	local player = game.Players:GetPlayerFromCharacter(character)
+	if player and humanoid and humanoid.Health > 0 then
+		if not touchedConnections[player] then
+			touchedConnections[player] = true
+			sound:Play()
+			humanoid:TakeDamage(1000)
+			
+			spawn(function()
+				wait(1)
+				touchedConnections[player] = nil
+			end)
+		end
+	end
+end)
+
+local function moveDragon()
+	while true do
+		local direction = Vector3.new(math.random(-1, 1), math.random(0, 1), math.random(-1, 1)).unit * speed
+		local newPosition = part.Position + direction
+		local distance = (newPosition - part.Position).Magnitude 
+		local duration = distance / speed
+		local info = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+		local tween = TweenServic:Create(part, info, {Position = newPosition})
+		tween:Play()
+		
+		spawn(function()
+			wait(0.1)
+			part.CFrame = CFrame.lookAt(part.Position, newPosition)
+			
+		end)
+		wait(moveInterval)
+		
+	end
+end
+
+moveDragon()
